@@ -1,0 +1,21 @@
+{
+  "name": "bipiane/criteria-builder",
+  "description": "A simple library to transform HTTP parameters in Doctrine Criteria",
+  "homepage": "https://github.com/bipiane/criteria-builder",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Ivan Pianetti",
+      "email": "ivanpianetti23@gmail.com"
+    }
+  ],
+  "require": {
+    "php": ">=5.3.0",
+    "symfony/http-foundation": "3.2.*"
+  },
+  "autoload": {
+    "psr-4": {
+      "QueryBuilder\\": "src"
+    }
+  }
+}
