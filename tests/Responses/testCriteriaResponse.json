@@ -1,0 +1,78 @@
+[
+  {
+    "param": "id",
+    "criteria": ">=",
+    "criteriaOriginal": "ge",
+    "valor": 11,
+    "isObjeto": false,
+    "subCriteria": null
+  },
+  {
+    "param": "activo",
+    "criteria": "=",
+    "criteriaOriginal": "eq",
+    "valor": "1",
+    "isObjeto": false,
+    "subCriteria": null
+  },
+  {
+    "param": "descripcion",
+    "criteria": "LIKE",
+    "criteriaOriginal": "like",
+    "valor": "%Colon%",
+    "isObjeto": false,
+    "subCriteria": null
+  },
+  {
+    "param": "provincia",
+    "criteria": "=",
+    "criteriaOriginal": "eq",
+    "valor": null,
+    "isObjeto": true,
+    "subCriteria": {
+      "param": "abrev",
+      "criteria": "!=",
+      "criteriaOriginal": "ne",
+      "valor": "B",
+      "isObjeto": false,
+      "subCriteria": null
+    }
+  },
+  {
+    "param": "provincia",
+    "criteria": "=",
+    "criteriaOriginal": "eq",
+    "valor": null,
+    "isObjeto": true,
+    "subCriteria": {
+      "param": "pais",
+      "criteria": "<=",
+      "criteriaOriginal": "le",
+      "valor": 5,
+      "isObjeto": false,
+      "subCriteria": null
+    }
+  },
+  {
+    "param": "provincia",
+    "criteria": "=",
+    "criteriaOriginal": "eq",
+    "valor": null,
+    "isObjeto": true,
+    "subCriteria": {
+      "param": "pais",
+      "criteria": "=",
+      "criteriaOriginal": "eq",
+      "valor": null,
+      "isObjeto": true,
+      "subCriteria": {
+        "param": "activo",
+        "criteria": "=",
+        "criteriaOriginal": "eq",
+        "valor": "1",
+        "isObjeto": false,
+        "subCriteria": null
+      }
+    }
+  }
+]
