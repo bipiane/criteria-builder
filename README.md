@@ -19,14 +19,14 @@ Example
 <?php
 /**
  * GET ../api/users?
-        limit=12&
-        offset=1&
-        sort=city.name&
-        order=ASC&
-        lastname[like]=Pian%&
-        city->state->country=1&
-        enabled=true&
-        id[ge]=50
+ *          limit=12&
+ *          offset=1&
+ *          sort=city.name&
+ *          order=ASC&
+ *          lastname[like]=Pian%&
+ *          city->state->country=1&
+ *          enabled=true&
+ *          id[ge]=50
  * @param Request $request
  */
 public function exampleAction(Request $request)
