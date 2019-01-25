@@ -4,3 +4,68 @@
 
 Doctrine Criteria Builder from HTTP parameters in PHP
 ------------
+
+Installation
+------------
+
+```bash
+composer require bipiane/criteria-builder
+```
+
+Example
+------------
+
+```php
+<?php
+/**
+ * GET ../api/users?limit=12&amp;offset=1&amp;sort=city.name&amp;order=ASC&amp;lastname[like]=Pian%&amp;city->state->country=1&amp;enabled=true&amp;id[ge]=50
+ * @param Request $request
+ */
+public function exampleAction(Request $request)
+{
+    $criteriaUser = [
+        'id' => CriteriaDoctrine::CRITERIAS_NUMBER,
+        'name' => CriteriaDoctrine::CRITERIAS_STRING,
+        'lastname' => CriteriaDoctrine::CRITERIAS_STRING,
+        'city' => [
+            'id' => CriteriaDoctrine::CRITERIAS_NUMBER,
+            'name' => CriteriaDoctrine::CRITERIAS_STRING,
+            'state' => [
+                'id' => CriteriaDoctrine::CRITERIAS_NUMBER,
+                'name' => CriteriaDoctrine::CRITERIAS_STRING,
+                'country' => [
+                    'id' => CriteriaDoctrine::CRITERIAS_NUMBER,
+                    'name' => CriteriaDoctrine::CRITERIAS_STRING,
+                    'enabled' => [CriteriaDoctrine::CRITERIA_EQ],
+                ],
+                'enabled' => [CriteriaDoctrine::CRITERIA_EQ],
+            ],
+            'enabled' => [CriteriaDoctrine::CRITERIA_EQ],
+        ],
+        'enabled' => [CriteriaDoctrine::CRITERIA_EQ],
+    ];
+
+    try {
+        $qb = $this->getDoctrine()->getManager()
+            ->getRepository('ModelBundle:User')
+            ->createQueryBuilder('usr');
+
+        $qb = CriteriaBuilder::fetchFromQuery(
+            $qb,
+            $request->query->all(),
+            $criteriaUser
+        );
+
+        var_dump($qb->getQuery()->getArrayResult());
+    } catch (CriteriaException $e) {
+    }
+    // ...
+}
+```
+
+Testing
+------------
+
+```
+./vendor/bin/simple-phpunit
+```
