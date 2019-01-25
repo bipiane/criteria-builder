@@ -18,7 +18,15 @@ Example
 ```php
 <?php
 /**
- * GET ../api/users?limit=12&amp;offset=1&amp;sort=city.name&amp;order=ASC&amp;lastname[like]=Pian%&amp;city->state->country=1&amp;enabled=true&amp;id[ge]=50
+ * GET ../api/users?
+        limit=12&
+        offset=1&
+        sort=city.name&
+        order=ASC&
+        lastname[like]=Pian%&
+        city->state->country=1&
+        enabled=true&
+        id[ge]=50
  * @param Request $request
  */
 public function exampleAction(Request $request)
