@@ -121,7 +121,7 @@ class CriteriaDoctrine
     public function __construct($param, $criteria, $valor)
     {
         $this->param = $param;
-        $this->criteria = $this->mapCriteria($criteria);
+        $this->criteria = $this->mapCriteria($criteria, $valor);
         $this->criteriaOriginal = $criteria? strtolower($criteria):CriteriaDoctrine::CRITERIA_EQ;
         $this->valor = $this->castValue($valor);
         $this->isObjeto = false;
@@ -132,6 +132,9 @@ class CriteriaDoctrine
         if($this->isObjeto){
             return "{$this->param}{{$this->subCriteria}}";
         }else{
+            if($this->isNullFilter()){
+                return "{$this->param} {$this->criteria}";
+            }
             return "{$this->param} {$this->criteria} '{$this->valor}'";
         }
     }
@@ -144,6 +147,9 @@ class CriteriaDoctrine
      */
     function getWhere($objName, $parameterName)
     {
+        if($this->isNullFilter()){
+            return "{$objName}.{$this->param} {$this->criteria}";
+        }
         return "{$objName}.{$this->param} {$this->criteria} :{$parameterName}";
     }
 
@@ -154,6 +160,15 @@ class CriteriaDoctrine
     function isPaginacion()
     {
         return in_array($this->param, ['offset', 'limit', 'sort', 'order']);
+    }
+
+    /**
+     * Determina si la consulta es por valor nulo
+     * @return bool
+     */
+    function isNullFilter()
+    {
+        return ($this->criteria == 'IS NULL' || $this->criteria == 'IS NOT NULL');
     }
 
     /**
@@ -210,8 +225,12 @@ class CriteriaDoctrine
                 $qb->andWhere($orCriteria);
             }else{
                 $where = $criteriaBuilder->getWhere($objAliasName, $paramName);
-                $qb->andWhere($where)
-                    ->setParameter("${paramName}", $valor);
+                $qb->andWhere($where);
+
+                // Si el where no es por nulo, setteamos el parámetro
+                if(!$criteriaBuilder->isNullFilter()){
+                    $qb->setParameter("${paramName}", $valor);
+                }
             }
 
             return $qb;
@@ -368,6 +387,13 @@ class CriteriaDoctrine
                         "No se permite consultar '{$criteriaObj->param}' por '{$criteriaObj->criteriaOriginal}' y solo se permite por '{$msj}'."
                     );
                 }
+                if($criteriaObj->valor == 'null'){
+                    if(!($criteriaObj->criteriaOriginal == 'eq' || $criteriaObj->criteriaOriginal == 'ne')){
+                        throw new CriteriaException(
+                            "Las consultas por valor nulo solo puede ser 'eq,ne'."
+                        );
+                    }
+                }
             }
         }else{
             // Excluímos las criterias de paginación y ordenamiento,
@@ -456,9 +482,10 @@ class CriteriaDoctrine
     /**
      * Mapea las criterias al formato que Doctrine necesita
      * @param $criteria
+     * @param $valor
      * @return string
      */
-    private function mapCriteria($criteria)
+    private function mapCriteria($criteria, $valor)
     {
         $resp = '=';
         switch(strtolower($criteria)){
@@ -483,6 +510,16 @@ class CriteriaDoctrine
                 break;
             default;
                 break;
+        }
+
+        // Las búsquedas por NULL deben adaptarse
+        if(strtolower($valor) === 'null'){
+            if($resp == '='){
+                $resp = 'IS NULL';
+            }
+            if($resp == '!='){
+                $resp = 'IS NOT NULL';
+            }
         }
 
         return $resp;

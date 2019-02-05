@@ -1,6 +1,6 @@
 {
   "name": "bipiane/criteria-builder",
-  "description": "A simple library to transform HTTP parameters in Doctrine Criteria",
+  "description": "Doctrine Criteria Builder from HTTP parameters in PHP",
   "homepage": "https://github.com/bipiane/criteria-builder",
   "license": "MIT",
   "authors": [

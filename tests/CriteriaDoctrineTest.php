@@ -37,7 +37,16 @@ class CriteriaDoctrineTest extends KernelTestCase
 
     public function testCriteria()
     {
-        // GET .../api/localidades?id[ge]=11&activo=true&descripcion[like]=%Colon%&provincia->abrev[ne]=B&provincia->pais[le]=5&provincia->pais->activo=true
+        // GET .../api/localidades?
+        //      id[ge]=11&
+        //      activo=true&
+        //      descripcion[like]=%Colon%&
+        //      provincia->descripcion=null&
+        //      provincia->abrev[ne]=B&
+        //      provincia->pais[le]=5&
+        //      provincia->pais->descripcion[ne]='null'&
+        //      provincia->pais->abrev[ne]=null&
+        //      provincia->pais->activo=true
         $queryHTTP = [
             'id' => [
                 'ge' => 11
@@ -46,11 +55,18 @@ class CriteriaDoctrineTest extends KernelTestCase
             'descripcion' => [
                 'like' => '%Colon%'
             ],
+            'provincia->descripcion' => null,
             'provincia->abrev' => [
                 'ne' => 'B'
             ],
             'provincia->pais' => [
                 'le' => 5
+            ],
+            'provincia->pais->descripcion' => [
+                'ne' => 'null'
+            ],
+            'provincia->pais->abrev' => [
+                'ne' => null
             ],
             'provincia->pais->activo' => true
         ];

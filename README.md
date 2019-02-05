@@ -24,6 +24,7 @@ Example
  *          sort=city.name&
  *          order=ASC&
  *          lastname[like]=Pian%&
+ *          city->state->code[ne]=null&
  *          city->state->country=1&
  *          enabled=true&
  *          id[ge]=50
@@ -41,6 +42,7 @@ public function exampleAction(Request $request)
             'state' => [
                 'id' => CriteriaDoctrine::CRITERIAS_NUMBER,
                 'name' => CriteriaDoctrine::CRITERIAS_STRING,
+                'code' => CriteriaDoctrine::CRITERIAS_STRING,
                 'country' => [
                     'id' => CriteriaDoctrine::CRITERIAS_NUMBER,
                     'name' => CriteriaDoctrine::CRITERIAS_STRING,
