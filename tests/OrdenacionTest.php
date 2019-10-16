@@ -37,6 +37,9 @@ class OrdenacionTest extends TestCase
         'activo' => ['eq']
     ];
 
+    /**
+     * @throws CriteriaException
+     */
     public function testOrder()
     {
         // ASC
@@ -69,6 +72,9 @@ class OrdenacionTest extends TestCase
         CriteriaDoctrine::obtenerCriterias($request->query->all(), []);
     }
 
+    /**
+     * @throws CriteriaException
+     */
     public function testSortNivelCero()
     {
         // OK: Sort a nivel cero
@@ -91,6 +97,9 @@ class OrdenacionTest extends TestCase
         CriteriaDoctrine::obtenerCriterias($request->query->all(), $this->criteriasHabilitadas);
     }
 
+    /**
+     * @throws CriteriaException
+     */
     public function testSortRelacion()
     {
         // OK
@@ -113,6 +122,9 @@ class OrdenacionTest extends TestCase
         CriteriaDoctrine::obtenerCriterias($request->query->all(), $this->criteriasHabilitadas);
     }
 
+    /**
+     * @throws CriteriaException
+     */
     public function testSortRelacionObjetoError()
     {
         $request = new Request();

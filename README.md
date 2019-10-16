@@ -24,8 +24,8 @@ Example
  *          sort=city.name&
  *          order=ASC&
  *          lastname[like]=Pian%&
- *          city->state->code[ne]=null&
- *          city->state->country=1&
+ *          city.state.code[ne]=null&
+ *          city.state.country=1&
  *          enabled=true&
  *          id[ge]=50
  * @param Request $request
@@ -46,13 +46,13 @@ public function exampleAction(Request $request)
                 'country' => [
                     'id' => CriteriaDoctrine::CRITERIAS_NUMBER,
                     'name' => CriteriaDoctrine::CRITERIAS_STRING,
-                    'enabled' => [CriteriaDoctrine::CRITERIA_EQ],
+                    'enabled' => CriteriaDoctrine::CRITERIAS_BOOLEAN,
                 ],
-                'enabled' => [CriteriaDoctrine::CRITERIA_EQ],
+                'enabled' => CriteriaDoctrine::CRITERIAS_BOOLEAN,
             ],
-            'enabled' => [CriteriaDoctrine::CRITERIA_EQ],
+            'enabled' => CriteriaDoctrine::CRITERIAS_BOOLEAN,
         ],
-        'enabled' => [CriteriaDoctrine::CRITERIA_EQ],
+        'enabled' => CriteriaDoctrine::CRITERIAS_BOOLEAN,
     ];
 
     try {

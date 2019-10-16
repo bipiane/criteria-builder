@@ -19,6 +19,11 @@ use Doctrine\ORM\QueryBuilder;
 class CriteriaDoctrine
 {
     /**
+     * Api selector
+     */
+    const API_SELECTOR = '.';
+
+    /**
      * Equal
      */
     const CRITERIA_EQ = 'eq';
@@ -60,7 +65,25 @@ class CriteriaDoctrine
     ];
 
     /**
-     * Criterias for strings
+     * Criterias for dates.
+     */
+    const CRITERIAS_DATE = [
+        CriteriaDoctrine::CRITERIA_EQ,
+        CriteriaDoctrine::CRITERIA_GE,
+        CriteriaDoctrine::CRITERIA_GT,
+        CriteriaDoctrine::CRITERIA_LE,
+        CriteriaDoctrine::CRITERIA_LT,
+    ];
+
+    /**
+     * Criterias for strings.
+     */
+    const CRITERIAS_BOOLEAN = [
+        CriteriaDoctrine::CRITERIA_EQ,
+    ];
+
+    /**
+     * Criterias for strings.
      */
     const CRITERIAS_STRING = [
         CriteriaDoctrine::CRITERIA_EQ,
@@ -175,7 +198,7 @@ class CriteriaDoctrine
      * Transforma los parámetros REST en una lista de criterias necesarias para QueryBuilder.
      * @TODO: No es posible obtener parámetros duplicados. Ej: codigo[ne]=ASP&codigo[ne]=IBU123
      * @param array $query
-     * @param $criteriasHabilitadas
+     * @param array $criteriasHabilitadas
      * @return array
      * @throws CriteriaException
      */
@@ -294,6 +317,42 @@ class CriteriaDoctrine
     }
 
     /**
+     * Aplana una array de criterias
+     * @param array $criterias
+     * @param null $prefijo
+     *
+     * @return string[]
+     */
+    public static function criteriasFlatten($criterias, $prefijo = null)
+    {
+        $filtros = [];
+        foreach ($criterias as $attr => $queries) {
+            if (is_array($queries)) {
+                foreach ($queries as $key => $q) {
+                    $atributo = $prefijo ? $prefijo . self::API_SELECTOR . $attr : $attr;
+                    if (is_array($q)) {
+                        $filtros = array_merge($filtros, self::criteriasFlatten($q, $atributo . self::API_SELECTOR . $key));
+                    } else {
+                        $filtroQuery = '[' . $q . ']';
+                        if (self::CRITERIA_EQ === $q) {
+                            $filtroQuery = '';
+                        }
+                        array_push($filtros, $atributo . $filtroQuery);
+                    }
+                }
+            } else {
+                $filtroQuery = '[' . $queries . ']';
+                if (self::CRITERIA_EQ === $queries) {
+                    $filtroQuery = '';
+                }
+                array_push($filtros, $prefijo . $filtroQuery);
+            }
+        }
+
+        return $filtros;
+    }
+
+    /**
      * Genera una CriteriaDoctrine a partir de los parámetos REST.
      * En caso de ser una consulta anidada, crea una criteria con criterias anidadas.
      * @param $param
@@ -302,9 +361,9 @@ class CriteriaDoctrine
      */
     private static function getCriteria($param, $value)
     {
-        // Verificamos si es un object criteria: Si el parámetro contiene el string '->'
-        if (strpos($param, '->') !== false) {
-            list($paramObj, $subParamObj) = explode('->', $param, 2);
+        // Verificamos si es un object criteria: Si el parámetro contiene el string definidio por API_OPERATOR
+        if (false !== strpos($param, self::API_SELECTOR)) {
+            list($paramObj, $subParamObj) = explode(self::API_SELECTOR, $param, 2);
 
             $objectCriteria = new CriteriaDoctrine($paramObj, null, null);
             $objectCriteria->isObjeto = true;
@@ -357,7 +416,7 @@ class CriteriaDoctrine
      * Valida recursivamente la criteria para determinar si está habilitada para filtrar.
      * En caso de que no sea valida lanzamos excepción
      * @param CriteriaDoctrine $criteriaObj
-     * @param $criteriasHabilitadas
+     * @param array $criteriasHabilitadas
      * @return bool
      * @throws CriteriaException
      */
@@ -387,10 +446,10 @@ class CriteriaDoctrine
                         "No se permite consultar '{$criteriaObj->param}' por '{$criteriaObj->criteriaOriginal}' y solo se permite por '{$msj}'."
                     );
                 }
-                if ($criteriaObj->valor == 'null') {
-                    if (!($criteriaObj->criteriaOriginal == 'eq' || $criteriaObj->criteriaOriginal == 'ne')) {
+                if ('null' === $criteriaObj->valor) {
+                    if (!(self::CRITERIA_EQ === $criteriaObj->criteriaOriginal || self::CRITERIA_NE === $criteriaObj->criteriaOriginal)) {
                         throw new CriteriaException(
-                            "Las consultas por valor nulo solo puede ser 'eq,ne'."
+                            "Las consultas por valor nulo solo puede ser '" . self::CRITERIA_EQ . ',' . self::CRITERIA_NE . "'."
                         );
                     }
                 }

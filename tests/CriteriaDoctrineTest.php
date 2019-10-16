@@ -36,18 +36,21 @@ class CriteriaDoctrineTest extends KernelTestCase
         'activo' => ['eq']
     ];
 
+    /**
+     * @throws CriteriaException
+     */
     public function testCriteria()
     {
         // GET .../api/localidades?
         //      id[ge]=11&
         //      activo=true&
         //      descripcion[like]=%Colon%&
-        //      provincia->descripcion=null&
-        //      provincia->abrev[ne]=B&
-        //      provincia->pais[le]=5&
-        //      provincia->pais->descripcion[ne]='null'&
-        //      provincia->pais->abrev[ne]=null&
-        //      provincia->pais->activo=true
+        //      provincia.descripcion=null&
+        //      provincia.abrev[ne]=B&
+        //      provincia.pais[le]=5&
+        //      provincia.pais.descripcion[ne]='null'&
+        //      provincia.pais.abrev[ne]=null&
+        //      provincia.pais.activo=true
         $queryHTTP = [
             'id' => [
                 'ge' => 11
@@ -56,20 +59,20 @@ class CriteriaDoctrineTest extends KernelTestCase
             'descripcion' => [
                 'like' => '%Colon%'
             ],
-            'provincia->descripcion' => null,
-            'provincia->abrev' => [
+            'provincia.descripcion' => null,
+            'provincia.abrev' => [
                 'ne' => 'B'
             ],
-            'provincia->pais' => [
+            'provincia.pais' => [
                 'le' => 5
             ],
-            'provincia->pais->descripcion' => [
+            'provincia.pais.descripcion' => [
                 'ne' => 'null'
             ],
-            'provincia->pais->abrev' => [
+            'provincia.pais.abrev' => [
                 'ne' => null
             ],
-            'provincia->pais->activo' => true
+            'provincia.pais.activo' => true
         ];
 
         $criterias = CriteriaDoctrine::obtenerCriterias($queryHTTP, $this->criteriasHabilitadas);
@@ -78,6 +81,9 @@ class CriteriaDoctrineTest extends KernelTestCase
         $this->assertJsonStringEqualsJsonFile('tests/Responses/testCriteriaResponse.json', json_encode($criterias));
     }
 
+    /**
+     * @throws CriteriaException
+     */
     public function testCriteriaFormatErrorNivelCero()
     {
         $criteriasHabilitadas = [
@@ -89,11 +95,11 @@ class CriteriaDoctrineTest extends KernelTestCase
                     'id' => CriteriaDoctrine::CRITERIAS_NUMBER,
                     'descripcion' => CriteriaDoctrine::CRITERIAS_STRING,
                     'abrev' => CriteriaDoctrine::CRITERIAS_STRING,
-                    'activo' => [CriteriaDoctrine::CRITERIA_EQ],
+                    'activo' => CriteriaDoctrine::CRITERIAS_BOOLEAN,
                 ],
                 'descripcion' => CriteriaDoctrine::CRITERIAS_STRING,
                 'abrev' => CriteriaDoctrine::CRITERIAS_STRING,
-                'activo' => [CriteriaDoctrine::CRITERIA_EQ],
+                'activo' => CriteriaDoctrine::CRITERIAS_BOOLEAN,
             ],
             'activo' => ['EQUAL'],
         ];
@@ -103,6 +109,9 @@ class CriteriaDoctrineTest extends KernelTestCase
         CriteriaDoctrine::obtenerCriterias([], $criteriasHabilitadas);
     }
 
+    /**
+     * @throws CriteriaException
+     */
     public function testCriteriaFormatErrorRelacion()
     {
         $criteriasHabilitadas = [
@@ -114,17 +123,43 @@ class CriteriaDoctrineTest extends KernelTestCase
                     'id' => CriteriaDoctrine::CRITERIAS_NUMBER,
                     'descripcion' => [CriteriaDoctrine::CRITERIA_EQ, CriteriaDoctrine::CRITERIA_NE, 'CONTAINS'],
                     'abrev' => CriteriaDoctrine::CRITERIAS_STRING,
-                    'activo' => [CriteriaDoctrine::CRITERIA_EQ],
+                    'activo' => CriteriaDoctrine::CRITERIAS_BOOLEAN,
                 ],
                 'descripcion' => CriteriaDoctrine::CRITERIAS_STRING,
                 'abrev' => CriteriaDoctrine::CRITERIAS_STRING,
-                'activo' => [CriteriaDoctrine::CRITERIA_EQ],
+                'activo' => CriteriaDoctrine::CRITERIAS_BOOLEAN,
             ],
-            'activo' => [CriteriaDoctrine::CRITERIA_EQ],
+            'activo' => CriteriaDoctrine::CRITERIAS_BOOLEAN,
         ];
         $this->expectException(CriteriaException::class);
         $this->expectExceptionMessage("Criterio 'CONTAINS' mal definido. Solo se pueden usar 'eq,ne,ge,gt,le,lt,like'");
 
         CriteriaDoctrine::obtenerCriterias([], $criteriasHabilitadas);
+    }
+
+    public function testCriteriasFlatten()
+    {
+        $criterias = [
+            'id' => [CriteriaDoctrine::CRITERIA_EQ],
+            'provincia' => [
+                'id' => CriteriaDoctrine::CRITERIAS_NUMBER,
+                'pais' => [
+                    'id' => [CriteriaDoctrine::CRITERIA_EQ],
+                ],
+                'descripcion' => [CriteriaDoctrine::CRITERIA_LIKE],
+            ],
+            'activo' => CriteriaDoctrine::CRITERIAS_BOOLEAN,
+        ];
+
+        /** @var string[] $flatten */
+        $flatten = CriteriaDoctrine::criteriasFlatten($criterias);
+
+        $result = ['id', 'provincia.id', 'provincia.id[ne]',
+            'provincia.id[ge]', 'provincia.id[gt]',
+            'provincia.id[le]', 'provincia.id[lt]',
+            'provincia.pais.id', 'provincia.descripcion[like]',
+            'activo'];
+
+        $this->assertEquals($flatten, $result, 'La lista aplanada de criterias no es correcta');
     }
 }
