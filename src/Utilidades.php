@@ -23,8 +23,8 @@ class Utilidades
      */
     public static function existInList($value, $array, $attr_by)
     {
-        foreach($array as $obj){
-            if($obj->{'get'.ucfirst($attr_by)}() == $value){
+        foreach ($array as $obj) {
+            if ($obj->{'get' . ucfirst($attr_by)}() == $value) {
                 return true;
             }
         }
@@ -39,8 +39,8 @@ class Utilidades
      */
     public static function containsArray($array)
     {
-        foreach($array as $value){
-            if(is_array($value)){
+        foreach ($array as $value) {
+            if (is_array($value)) {
                 return true;
             }
         }

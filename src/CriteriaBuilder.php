@@ -47,8 +47,8 @@ class CriteriaBuilder
         $limit = null;
         $joins = [];
 
-        foreach($criterias as $item){
-            if($item instanceof CriteriaDoctrine){
+        foreach ($criterias as $item) {
+            if ($item instanceof CriteriaDoctrine) {
                 // Obtenemos la lista de joins necesarios para QueryBuilder
                 $joins = CriteriaDoctrine::obtenerLeftJoins($joins, $objAliasName, $item);
 
@@ -56,29 +56,29 @@ class CriteriaBuilder
                 $valor = $item->valor;
 
                 // Creamos query Doctrine si la criteria no es de paginación u ordenación
-                if(!$item->isPaginacion()){
+                if (!$item->isPaginacion()) {
                     $valores = explode(',', $valor);
-                    if(sizeof($valores) > 1){
+                    if (sizeof($valores) > 1) {
                         $orCriteria = $qb->expr()->orX();
-                        foreach($valores as $v){
-                            $orCriteria->add($qb->expr()->eq("${objAliasName}.${param}", "'".$v."'"));
+                        foreach ($valores as $v) {
+                            $orCriteria->add($qb->expr()->eq("${objAliasName}.${param}", "'" . $v . "'"));
                         }
                         $qb->andWhere($orCriteria);
-                    }else{
+                    } else {
                         $paramName = "param_${objAliasName}_${param}";
                         $qb = CriteriaDoctrine::crearQuery($qb, $objAliasName, $item, $paramName);
                     }
-                }else{
-                    if($param == 'sort'){
-                        $sortParams = $objAliasName.'.'.$valor;
+                } else {
+                    if ($param == 'sort') {
+                        $sortParams = $objAliasName . '.' . $valor;
                     }
-                    if($param == 'order'){
+                    if ($param == 'order') {
                         $orderParams = $valor;
                     }
-                    if($param == 'offset'){
+                    if ($param == 'offset') {
                         $offset = $valor;
                     }
-                    if($param == 'limit'){
+                    if ($param == 'limit') {
                         $limit = $valor;
                     }
                 }
@@ -89,8 +89,8 @@ class CriteriaBuilder
         $joins = CriteriaDoctrine::obtenerLeftJoinsOrder($joins, $objAliasName, $sortParams);
 
         // Cargamos los joins a QueryBuilder
-        foreach($joins as $joinCriteria){
-            if($joinCriteria instanceof JoinCriteria){
+        foreach ($joins as $joinCriteria) {
+            if ($joinCriteria instanceof JoinCriteria) {
                 $qb->leftJoin($joinCriteria->join, $joinCriteria->alias);
             }
         }
@@ -98,8 +98,8 @@ class CriteriaBuilder
         // Ordenamos por los últimos 2 campos. Ej: 'parada.localidad.provincia.id' => 'provincia.id'
         $sortParams = implode('.', array_slice(explode('.', $sortParams), -2));
         $qb->orderBy($sortParams, $orderParams);
-        $qb->setMaxResults(min($limit? $limit:10, $maxLimit));
-        $qb->setFirstResult($offset? $offset:0);
+        $qb->setMaxResults(min($limit ? $limit : 10, $maxLimit));
+        $qb->setFirstResult($offset ? $offset : 0);
 
         return $qb;
     }

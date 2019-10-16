@@ -5,6 +5,7 @@
  * Date: 20/01/2019
  * Time: 14:45
  */
+
 namespace bipiane\test;
 
 use bipiane\CriteriaDoctrine;
@@ -43,7 +44,7 @@ class OrdenacionTest extends TestCase
         $request->query->set('order', 'ASC');
 
         $criterias = CriteriaDoctrine::obtenerCriterias($request->query->all(), []);
-        $criteria = $criterias[0] instanceof CriteriaDoctrine? $criterias[0]:null;
+        $criteria = $criterias[0] instanceof CriteriaDoctrine ? $criterias[0] : null;
 
         $this->assertEquals('order', $criteria->param);
         $this->assertEquals('ASC', $criteria->valor);
@@ -53,7 +54,7 @@ class OrdenacionTest extends TestCase
         $request->query->set('order', 'DESC');
 
         $criterias = CriteriaDoctrine::obtenerCriterias($request->query->all(), []);
-        $criteria = $criterias[0] instanceof CriteriaDoctrine? $criterias[0]:null;
+        $criteria = $criterias[0] instanceof CriteriaDoctrine ? $criterias[0] : null;
 
         $this->assertEquals('order', $criteria->param);
         $this->assertEquals('DESC', $criteria->valor);
@@ -75,7 +76,7 @@ class OrdenacionTest extends TestCase
         $request->query->set('sort', 'id');
 
         $criterias = CriteriaDoctrine::obtenerCriterias($request->query->all(), $this->criteriasHabilitadas);
-        $criteria = $criterias[0] instanceof CriteriaDoctrine? $criterias[0]:null;
+        $criteria = $criterias[0] instanceof CriteriaDoctrine ? $criterias[0] : null;
 
         $this->assertEquals('sort', $criteria->param);
         $this->assertEquals('id', $criteria->valor);
@@ -97,7 +98,7 @@ class OrdenacionTest extends TestCase
         $request->query->set('sort', 'provincia.pais.descripcion');
 
         $criterias = CriteriaDoctrine::obtenerCriterias($request->query->all(), $this->criteriasHabilitadas);
-        $criteria = $criterias[0] instanceof CriteriaDoctrine? $criterias[0]:null;
+        $criteria = $criterias[0] instanceof CriteriaDoctrine ? $criterias[0] : null;
 
         $this->assertEquals('sort', $criteria->param);
         $this->assertEquals('provincia.pais.descripcion', $criteria->valor);

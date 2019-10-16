@@ -5,6 +5,7 @@
  * Date: 20/01/2019
  * Time: 14:44
  */
+
 namespace bipiane\test;
 
 use bipiane\CriteriaDoctrine;
@@ -25,7 +26,7 @@ class PaginacionTest extends TestCase
         $request->query->set('offset', 10);
 
         $criterias = CriteriaDoctrine::obtenerCriterias($request->query->all(), []);
-        $criteria = $criterias[0] instanceof CriteriaDoctrine? $criterias[0]:null;
+        $criteria = $criterias[0] instanceof CriteriaDoctrine ? $criterias[0] : null;
 
         $this->assertEquals('offset', $criteria->param);
         $this->assertEquals(10, $criteria->valor);
@@ -47,7 +48,7 @@ class PaginacionTest extends TestCase
         $request->query->set('limit', 5);
 
         $criterias = CriteriaDoctrine::obtenerCriterias($request->query->all(), []);
-        $criteria = $criterias[0] instanceof CriteriaDoctrine? $criterias[0]:null;
+        $criteria = $criterias[0] instanceof CriteriaDoctrine ? $criterias[0] : null;
 
         $this->assertEquals('limit', $criteria->param);
         $this->assertEquals(5, $criteria->valor);

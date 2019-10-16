@@ -122,17 +122,17 @@ class CriteriaDoctrine
     {
         $this->param = $param;
         $this->criteria = $this->mapCriteria($criteria, $valor);
-        $this->criteriaOriginal = $criteria? strtolower($criteria):CriteriaDoctrine::CRITERIA_EQ;
+        $this->criteriaOriginal = $criteria ? strtolower($criteria) : CriteriaDoctrine::CRITERIA_EQ;
         $this->valor = $this->castValue($valor);
         $this->isObjeto = false;
     }
 
     function __toString()
     {
-        if($this->isObjeto){
+        if ($this->isObjeto) {
             return "{$this->param}{{$this->subCriteria}}";
-        }else{
-            if($this->isNullFilter()){
+        } else {
+            if ($this->isNullFilter()) {
                 return "{$this->param} {$this->criteria}";
             }
             return "{$this->param} {$this->criteria} '{$this->valor}'";
@@ -147,7 +147,7 @@ class CriteriaDoctrine
      */
     function getWhere($objName, $parameterName)
     {
-        if($this->isNullFilter()){
+        if ($this->isNullFilter()) {
             return "{$objName}.{$this->param} {$this->criteria}";
         }
         return "{$objName}.{$this->param} {$this->criteria} :{$parameterName}";
@@ -176,20 +176,20 @@ class CriteriaDoctrine
      * @TODO: No es posible obtener parámetros duplicados. Ej: codigo[ne]=ASP&codigo[ne]=IBU123
      * @param array $query
      * @param $criteriasHabilitadas
-     * @throws CriteriaException
      * @return array
+     * @throws CriteriaException
      */
     public static function obtenerCriterias(array $query, $criteriasHabilitadas)
     {
         $criterias = [];
 
         // Verificamos el formato de las criterias habilitadas
-        if(CriteriaDoctrine::validarFormatoCriteria($criteriasHabilitadas)){
-            foreach($query as $param => $value){
+        if (CriteriaDoctrine::validarFormatoCriteria($criteriasHabilitadas)) {
+            foreach ($query as $param => $value) {
                 $criteriaObj = CriteriaDoctrine::getCriteria($param, $value);
 
                 // Validamos la criteria para determinar si es valida y en caso de que no, lanzamos excepción
-                if(CriteriaDoctrine::validarCriteria($criteriaObj, $criteriasHabilitadas)){
+                if (CriteriaDoctrine::validarCriteria($criteriaObj, $criteriasHabilitadas)) {
                     array_push($criterias, $criteriaObj);
                 }
             }
@@ -208,27 +208,27 @@ class CriteriaDoctrine
      */
     public static function crearQuery(QueryBuilder $qb, $objAliasName, CriteriaDoctrine $criteriaBuilder, $paramName)
     {
-        if($criteriaBuilder->isObjeto){
-            $paramName = "param_{$criteriaBuilder->param}_{$criteriaBuilder->subCriteria->param}_".time();
+        if ($criteriaBuilder->isObjeto) {
+            $paramName = "param_{$criteriaBuilder->param}_{$criteriaBuilder->subCriteria->param}_" . time();
             $subObjAliasName = $criteriaBuilder->param;
 
             return CriteriaDoctrine::crearQuery($qb, $subObjAliasName, $criteriaBuilder->subCriteria, $paramName);
-        }else{
+        } else {
             $param = $criteriaBuilder->param;
             $valor = $criteriaBuilder->valor;
             $valores = explode(',', $valor);
-            if(sizeof($valores) > 1){
+            if (sizeof($valores) > 1) {
                 $orCriteria = $qb->expr()->orX();
-                foreach($valores as $v){
-                    $orCriteria->add($qb->expr()->eq("${objAliasName}.${param}", "'".$v."'"));
+                foreach ($valores as $v) {
+                    $orCriteria->add($qb->expr()->eq("${objAliasName}.${param}", "'" . $v . "'"));
                 }
                 $qb->andWhere($orCriteria);
-            }else{
+            } else {
                 $where = $criteriaBuilder->getWhere($objAliasName, $paramName);
                 $qb->andWhere($where);
 
                 // Si el where no es por nulo, setteamos el parámetro
-                if(!$criteriaBuilder->isNullFilter()){
+                if (!$criteriaBuilder->isNullFilter()) {
                     $qb->setParameter("${paramName}", $valor);
                 }
             }
@@ -247,19 +247,19 @@ class CriteriaDoctrine
     public static function obtenerLeftJoins($joins, $objAliasName, CriteriaDoctrine $criteriaBuilder)
     {
         // Si la criteria es sobre un objeto, creamos el join necesario para la consulta
-        if($criteriaBuilder->isObjeto){
+        if ($criteriaBuilder->isObjeto) {
             $subObjAliasName = $criteriaBuilder->param;
-            $join = $objAliasName.'.'.$criteriaBuilder->param;
+            $join = $objAliasName . '.' . $criteriaBuilder->param;
 
             $joinCriteria = new JoinCriteria($join, $subObjAliasName);
 
             // Verificamos que el join no exista en la lista antes de agregarlo
-            if(!Utilidades::existInList($joinCriteria->join, $joins, 'join')){
+            if (!Utilidades::existInList($joinCriteria->join, $joins, 'join')) {
                 array_push($joins, $joinCriteria);
             }
 
             return CriteriaDoctrine::obtenerLeftJoins($joins, $subObjAliasName, $criteriaBuilder->subCriteria);
-        }else{
+        } else {
             return $joins;
         }
     }
@@ -276,19 +276,19 @@ class CriteriaDoctrine
         // Quitamos el primer nivel de ordenamiento. Ej: 'parada.localidad.provincia.id' => 'localidad.provincia.id'
         $sortParams = implode('.', array_slice(explode('.', $sortParams), 1));
         // Verificamos si el sortParams hace referencia a un objeto. Si contiene '.'
-        if(strpos($sortParams, '.') !== false){
+        if (strpos($sortParams, '.') !== false) {
             $param = explode('.', $sortParams);
 
             $subObjAliasName = $param[0];
-            $joinCriteria = new JoinCriteria($objAliasName.'.'.$subObjAliasName, $subObjAliasName);
+            $joinCriteria = new JoinCriteria($objAliasName . '.' . $subObjAliasName, $subObjAliasName);
 
             // Verificamos que el join no exista en la lista antes de agregarlo
-            if(!Utilidades::existInList($joinCriteria->join, $joins, 'join')){
+            if (!Utilidades::existInList($joinCriteria->join, $joins, 'join')) {
                 array_push($joins, $joinCriteria);
             }
 
             return CriteriaDoctrine::obtenerLeftJoinsOrder($joins, $subObjAliasName, $sortParams);
-        }else{
+        } else {
             return $joins;
         }
     }
@@ -303,7 +303,7 @@ class CriteriaDoctrine
     private static function getCriteria($param, $value)
     {
         // Verificamos si es un object criteria: Si el parámetro contiene el string '->'
-        if(strpos($param, '->') !== false){
+        if (strpos($param, '->') !== false) {
             list($paramObj, $subParamObj) = explode('->', $param, 2);
 
             $objectCriteria = new CriteriaDoctrine($paramObj, null, null);
@@ -311,17 +311,17 @@ class CriteriaDoctrine
             $objectCriteria->subCriteria = CriteriaDoctrine::getCriteria($subParamObj, $value);
 
             return $objectCriteria;
-        }else{
+        } else {
             // Determinamos si el valor del parámetro contiene una criteria para mapearla correctamente
             // Sino asumimos que la criteria por defecto es 'eq'
-            if(is_array($value)){
+            if (is_array($value)) {
                 $criteriaObj = null;
-                foreach($value as $criteria => $valor){
+                foreach ($value as $criteria => $valor) {
                     $criteriaObj = new CriteriaDoctrine($param, $criteria, $valor);
                 }
 
                 return $criteriaObj;
-            }else{
+            } else {
                 return new CriteriaDoctrine($param, CriteriaDoctrine::CRITERIA_EQ, $value);
             }
         }
@@ -335,12 +335,12 @@ class CriteriaDoctrine
      */
     private static function validarFormatoCriteria($criteriasHabilitadas)
     {
-        foreach($criteriasHabilitadas as $c => $v){
-            if(Utilidades::containsArray($v)){
+        foreach ($criteriasHabilitadas as $c => $v) {
+            if (Utilidades::containsArray($v)) {
                 CriteriaDoctrine::validarFormatoCriteria($v);
-            }else{
-                foreach($v as $criteriaDoctrine){
-                    if(!in_array($criteriaDoctrine, CriteriaDoctrine::ALL_CRITERIAS)){
+            } else {
+                foreach ($v as $criteriaDoctrine) {
+                    if (!in_array($criteriaDoctrine, CriteriaDoctrine::ALL_CRITERIAS)) {
                         $msj = implode(',', CriteriaDoctrine::ALL_CRITERIAS);
                         throw new CriteriaException(
                             "Criterio '$criteriaDoctrine' mal definido. Solo se pueden usar '$msj'"
@@ -358,68 +358,68 @@ class CriteriaDoctrine
      * En caso de que no sea valida lanzamos excepción
      * @param CriteriaDoctrine $criteriaObj
      * @param $criteriasHabilitadas
-     * @throws CriteriaException
      * @return bool
+     * @throws CriteriaException
      */
     private static function validarCriteria(CriteriaDoctrine $criteriaObj, $criteriasHabilitadas)
     {
         // Validamos que la criteria sea permitida para filtrar
-        if(isset($criteriasHabilitadas[$criteriaObj->param])){
+        if (isset($criteriasHabilitadas[$criteriaObj->param])) {
             $criteriasHabilitadasByParam = $criteriasHabilitadas[$criteriaObj->param];
 
             // Si la criteria es sobre un objeto, validamos recursivamente la sub criteria
-            if($criteriaObj->isObjeto){
+            if ($criteriaObj->isObjeto) {
                 return CriteriaDoctrine::validarCriteria($criteriaObj->subCriteria, $criteriasHabilitadasByParam);
-            }else{
+            } else {
                 // Si el parámetro no es un objeto, pero tiene una lista de criterias habilitadas, es por lo tanto un objeto doctrine y asumimos que se está buscando por PK.
                 // Ej: provincia = 12. Donde provincia es un objeto doctrine, 12 es primary key y además tiene una lista de criterias habilitadas.
                 // Entonces 'provincia = 12' es equivalente a 'provincia.id = 12'
                 $isFindById = Utilidades::containsArray($criteriasHabilitadasByParam);
 
                 // Las búsquedas por pk de objeto deben ser solo numéricas. Ej: no deben ser 'provincia[like] = 12'
-                if($isFindById){
+                if ($isFindById) {
                     $criteriasHabilitadasByParam = CriteriaDoctrine::CRITERIAS_NUMBER;
                 }
                 // Verificamos la criteria está dentro de las habilitadas.
-                if(!in_array($criteriaObj->criteriaOriginal, $criteriasHabilitadasByParam)){
+                if (!in_array($criteriaObj->criteriaOriginal, $criteriasHabilitadasByParam)) {
                     $msj = implode(',', $criteriasHabilitadasByParam);
                     throw new CriteriaException(
                         "No se permite consultar '{$criteriaObj->param}' por '{$criteriaObj->criteriaOriginal}' y solo se permite por '{$msj}'."
                     );
                 }
-                if($criteriaObj->valor == 'null'){
-                    if(!($criteriaObj->criteriaOriginal == 'eq' || $criteriaObj->criteriaOriginal == 'ne')){
+                if ($criteriaObj->valor == 'null') {
+                    if (!($criteriaObj->criteriaOriginal == 'eq' || $criteriaObj->criteriaOriginal == 'ne')) {
                         throw new CriteriaException(
                             "Las consultas por valor nulo solo puede ser 'eq,ne'."
                         );
                     }
                 }
             }
-        }else{
+        } else {
             // Excluímos las criterias de paginación y ordenamiento,
             // ya que esos atributos no están definidos en las criterias habilitadas para el objeto
-            if(!$criteriaObj->isPaginacion()){
+            if (!$criteriaObj->isPaginacion()) {
                 throw new CriteriaException(
                     "No se permite consultar por '{$criteriaObj->param}'. Detalle:'{$criteriaObj}'."
                 );
-            }else{
+            } else {
                 // Validamos criterias de paginación y ordenación
-                if($criteriaObj->param == 'limit' && !is_numeric($criteriaObj->valor)){
+                if ($criteriaObj->param == 'limit' && !is_numeric($criteriaObj->valor)) {
                     throw new CriteriaException(
                         "El atributo 'limit' debe ser numérico. Detalle:'{$criteriaObj}'."
                     );
                 }
-                if($criteriaObj->param == 'offset' && !is_numeric($criteriaObj->valor)){
+                if ($criteriaObj->param == 'offset' && !is_numeric($criteriaObj->valor)) {
                     throw new CriteriaException(
                         "El atributo 'offset' debe ser numérico. Detalle:'{$criteriaObj}'."
                     );
                 }
-                if($criteriaObj->param == 'order' && !in_array(strtoupper($criteriaObj->valor), ['ASC', 'DESC'])){
+                if ($criteriaObj->param == 'order' && !in_array(strtoupper($criteriaObj->valor), ['ASC', 'DESC'])) {
                     throw new CriteriaException(
                         "Solo se permite ordenar por 'ASC' o 'DESC'. Detalle:'{$criteriaObj}'."
                     );
                 }
-                if($criteriaObj->param == 'sort'){
+                if ($criteriaObj->param == 'sort') {
                     CriteriaDoctrine::validarSort($criteriaObj->valor, $criteriasHabilitadas);
                 }
             }
@@ -438,7 +438,7 @@ class CriteriaDoctrine
     private static function validarSort($sortParams, $criteriasHabilitadas)
     {
         // Verificamos que el parámetro de ordenación no comience ni termine con punto
-        if(substr($sortParams, 0, 1) === '.' || substr($sortParams, strlen($sortParams) - 1, strlen($sortParams)) === '.'){
+        if (substr($sortParams, 0, 1) === '.' || substr($sortParams, strlen($sortParams) - 1, strlen($sortParams)) === '.') {
             throw new CriteriaException(
                 "El parámetro de ordenación '$sortParams' no debe comenzar ni terminar con '.'"
             );
@@ -446,7 +446,7 @@ class CriteriaDoctrine
 
         // Obtenemos y verificamos el primer nivel de ordenamiento. Ej: 'parada.localidad.provincia.id' => 'parada'
         $firstSort = explode('.', $sortParams)[0];
-        if(!isset($criteriasHabilitadas[$firstSort])){
+        if (!isset($criteriasHabilitadas[$firstSort])) {
             $msj = implode(',', array_keys($criteriasHabilitadas));
             throw new CriteriaException(
                 "No se permite ordenar por '$firstSort'. Solo se permite por '$msj'"
@@ -455,20 +455,20 @@ class CriteriaDoctrine
         $subCriteriaHabilitada = $criteriasHabilitadas[$firstSort];
 
         // Verificamos si el sortParams hace referencia a un objeto para validarlo. Si contiene '.'
-        if(strpos($sortParams, '.') !== false){
+        if (strpos($sortParams, '.') !== false) {
             // Quitamos el primer nivel de ordenamiento. Ej: 'parada.localidad.provincia.id' => 'localidad.provincia.id'
             $sortParams = implode('.', array_slice(explode('.', $sortParams), 1));
 
             return CriteriaDoctrine::validarSort($sortParams, $subCriteriaHabilitada);
-        }else{
+        } else {
             // Verificamos que existan criterias habilitadas para el atributo. Ej: que contenga una lista eq,ge,gt...
-            if(sizeof($subCriteriaHabilitada) === 0){
+            if (sizeof($subCriteriaHabilitada) === 0) {
                 throw new CriteriaException(
                     "No se permite ordenar por '$firstSort'"
                 );
             }
             // Verificamos que el atributo no sea del tipo objeto, es decir que no tenga un sub array de criterias.
-            if(Utilidades::containsArray($subCriteriaHabilitada)){
+            if (Utilidades::containsArray($subCriteriaHabilitada)) {
                 $msj = implode(',', array_keys($subCriteriaHabilitada));
                 throw new CriteriaException(
                     "Es necesario definir atributo para ordenar '$firstSort'. Pueden ser '$msj'"
@@ -488,7 +488,7 @@ class CriteriaDoctrine
     private function mapCriteria($criteria, $valor)
     {
         $resp = '=';
-        switch(strtolower($criteria)){
+        switch (strtolower($criteria)) {
             case CriteriaDoctrine::CRITERIA_GE:
                 $resp = '>=';
                 break;
@@ -513,11 +513,11 @@ class CriteriaDoctrine
         }
 
         // Las búsquedas por NULL deben adaptarse
-        if(strtolower($valor) === 'null'){
-            if($resp == '='){
+        if (strtolower($valor) === 'null') {
+            if ($resp == '=') {
                 $resp = 'IS NULL';
             }
-            if($resp == '!='){
+            if ($resp == '!=') {
                 $resp = 'IS NOT NULL';
             }
         }
@@ -533,9 +533,9 @@ class CriteriaDoctrine
      */
     private function castValue($value)
     {
-        if($value === true || strtolower($value) === 'true'){
+        if ($value === true || strtolower($value) === 'true') {
             $value = '1';
-        }elseif($value === false || strtolower($value) === 'false'){
+        } elseif ($value === false || strtolower($value) === 'false') {
             $value = '0';
         }
 
