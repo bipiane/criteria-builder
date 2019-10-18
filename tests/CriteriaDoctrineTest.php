@@ -45,12 +45,12 @@ class CriteriaDoctrineTest extends KernelTestCase
         //      id[ge]=11&
         //      activo=true&
         //      descripcion[like]=%Colon%&
-        //      provincia.descripcion=null&
-        //      provincia.abrev[ne]=B&
-        //      provincia.pais[le]=5&
-        //      provincia.pais.descripcion[ne]='null'&
-        //      provincia.pais.abrev[ne]=null&
-        //      provincia.pais.activo=true
+        //      provincia-descripcion=null&
+        //      provincia-abrev[ne]=B&
+        //      provincia-pais[le]=5&
+        //      provincia-pais-descripcion[ne]='null'&
+        //      provincia-pais-abrev[ne]=null&
+        //      provincia-pais-activo=true
         $queryHTTP = [
             'id' => [
                 'ge' => 11
@@ -59,20 +59,20 @@ class CriteriaDoctrineTest extends KernelTestCase
             'descripcion' => [
                 'like' => '%Colon%'
             ],
-            'provincia.descripcion' => null,
-            'provincia.abrev' => [
+            'provincia-descripcion' => null,
+            'provincia-abrev' => [
                 'ne' => 'B'
             ],
-            'provincia.pais' => [
+            'provincia-pais' => [
                 'le' => 5
             ],
-            'provincia.pais.descripcion' => [
+            'provincia-pais-descripcion' => [
                 'ne' => 'null'
             ],
-            'provincia.pais.abrev' => [
+            'provincia-pais-abrev' => [
                 'ne' => null
             ],
-            'provincia.pais.activo' => true
+            'provincia-pais-activo' => true
         ];
 
         $criterias = CriteriaDoctrine::obtenerCriterias($queryHTTP, $this->criteriasHabilitadas);
@@ -154,10 +154,10 @@ class CriteriaDoctrineTest extends KernelTestCase
         /** @var string[] $flatten */
         $flatten = CriteriaDoctrine::criteriasFlatten($criterias);
 
-        $result = ['id', 'provincia.id', 'provincia.id[ne]',
-            'provincia.id[ge]', 'provincia.id[gt]',
-            'provincia.id[le]', 'provincia.id[lt]',
-            'provincia.pais.id', 'provincia.descripcion[like]',
+        $result = ['id', 'provincia-id', 'provincia-id[ne]',
+            'provincia-id[ge]', 'provincia-id[gt]',
+            'provincia-id[le]', 'provincia-id[lt]',
+            'provincia-pais-id', 'provincia-descripcion[like]',
             'activo'];
 
         $this->assertEquals($flatten, $result, 'La lista aplanada de criterias no es correcta');

@@ -21,7 +21,7 @@ class CriteriaDoctrine
     /**
      * Api selector
      */
-    const API_SELECTOR = '.';
+    const API_SELECTOR = '-';
 
     /**
      * Equal
@@ -341,6 +341,7 @@ class CriteriaDoctrine
                     }
                 }
             } else {
+                // @TODO Considerar ..&provincia-pais=1 === provincia-pais.id[eq]=1
                 $filtroQuery = '[' . $queries . ']';
                 if (self::CRITERIA_EQ === $queries) {
                     $filtroQuery = '';

@@ -21,11 +21,11 @@ Example
  * GET ../api/users?
  *          limit=12&
  *          offset=1&
- *          sort=city.name&
+ *          sort=city-name&
  *          order=ASC&
  *          lastname[like]=Pian%&
- *          city.state.code[ne]=null&
- *          city.state.country=1&
+ *          city-state-code[ne]=null&
+ *          city-state-country=1&
  *          enabled=true&
  *          id[ge]=50
  * @param Request $request
