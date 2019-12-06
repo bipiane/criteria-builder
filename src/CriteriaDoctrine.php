@@ -8,7 +8,12 @@
 
 namespace bipiane;
 
+use ReflectionClass;
+use ReflectionException;
 use Doctrine\ORM\QueryBuilder;
+use Swagger\Annotations\Property;
+use Doctrine\Common\Annotations\AnnotationReader;
+use Doctrine\Common\Annotations\AnnotationException;
 
 /**
  * Class CriteriaDoctrine
@@ -22,6 +27,11 @@ class CriteriaDoctrine
      * Api selector
      */
     const API_SELECTOR = '-';
+
+    /**
+     * Class selector
+     */
+    const CLASS_SELECTOR = '__clase__';
 
     /**
      * Equal
@@ -327,30 +337,184 @@ class CriteriaDoctrine
     {
         $filtros = [];
         foreach ($criterias as $attr => $queries) {
-            if (is_array($queries)) {
-                foreach ($queries as $key => $q) {
-                    $atributo = $prefijo ? $prefijo . self::API_SELECTOR . $attr : $attr;
-                    if (is_array($q)) {
-                        $filtros = array_merge($filtros, self::criteriasFlatten($q, $atributo . self::API_SELECTOR . $key));
-                    } else {
-                        $filtroQuery = '[' . $q . ']';
-                        if (self::CRITERIA_EQ === $q) {
-                            $filtroQuery = '';
+            if ($attr !== self::CLASS_SELECTOR) {
+                if (is_array($queries)) {
+                    foreach ($queries as $key => $q) {
+                        $atributo = $prefijo ? $prefijo . self::API_SELECTOR . $attr : $attr;
+                        if (is_array($q)) {
+                            $filtros = array_merge($filtros, self::criteriasFlatten($q, $atributo . self::API_SELECTOR . $key));
+                        } else {
+                            $filtroQuery = '[' . $q . ']';
+                            if (self::CRITERIA_EQ === $q) {
+                                $filtroQuery = '';
+                            }
+                            array_push($filtros, $atributo . $filtroQuery);
                         }
-                        array_push($filtros, $atributo . $filtroQuery);
                     }
+                } else {
+                    // @TODO Considerar ..&provincia-pais=1 === provincia-pais.id[eq]=1
+                    $filtroQuery = '[' . $queries . ']';
+                    if (self::CRITERIA_EQ === $queries) {
+                        $filtroQuery = '';
+                    }
+                    array_push($filtros, $prefijo . $filtroQuery);
                 }
-            } else {
-                // @TODO Considerar ..&provincia-pais=1 === provincia-pais.id[eq]=1
-                $filtroQuery = '[' . $queries . ']';
-                if (self::CRITERIA_EQ === $queries) {
-                    $filtroQuery = '';
-                }
-                array_push($filtros, $prefijo . $filtroQuery);
             }
         }
 
         return $filtros;
+    }
+
+    /**
+     * Genera parámetros formato Swagger desde las criterias
+     * @param $criterias
+     * @param string|null $prefijo
+     * @param string|null $clase
+     * @return array
+     * @throws AnnotationException
+     * @throws ReflectionException
+     */
+    public static function criteriasToSwagger($criterias, $prefijo = null, $clase = null)
+    {
+        $params = [];
+
+        $clase = self::getCriteriaClase($criterias) ?: $clase;
+        $propiedadesSwagger = self::getPropiedadesSwagger($clase);
+
+        foreach ($criterias as $attr => $queries) {
+            if (is_array($queries)) {
+                foreach ($queries as $key => $q) {
+                    $atributo = $prefijo ? $prefijo . self::API_SELECTOR . $attr : $attr;
+                    if (is_array($q)) {
+                        $subClase = self::getCriteriaClase($queries);
+                        $params = array_merge($params, self::criteriasToSwagger($q, $atributo . self::API_SELECTOR . $key, $subClase));
+                    } else {
+                        $query = self::createQuery($key, $atributo, $q, $propiedadesSwagger);
+                        if ($query) {
+                            array_push($params, $query);
+                        }
+                    }
+                }
+            } else {
+                $query = self::createQuery($attr, $prefijo, $queries, $propiedadesSwagger);
+                if ($query) {
+                    array_push($params, $query);
+                }
+            }
+        }
+
+        return $params;
+    }
+
+    /**
+     * Crea una query con formato Swagger según CriteriaBuilder
+     * @param string $attr
+     * @param string $q
+     * @param string $prefijo
+     * @param Property[] $propiedadesSwagger
+     * @return array|null
+     */
+    private static function createQuery($attr, $prefijo, $q, $propiedadesSwagger)
+    {
+        $query = null;
+        if ($attr !== self::CLASS_SELECTOR) {
+            $filtroQuery = '[' . $q . ']';
+            if (self::CRITERIA_EQ === $q) {
+                $filtroQuery = '';
+            }
+
+            $property = $prefijo . $filtroQuery;
+            $tipo = self::getTipoSwagger($propiedadesSwagger, $property);
+            $query = self::createSwaggerParameter($property, $tipo);
+        }
+        return $query;
+    }
+
+    /**
+     * Crea un array con el formato de parámetro Swagger
+     * @param string $property
+     * @param string $type
+     * @return array
+     */
+    private static function createSwaggerParameter($property, $type)
+    {
+        return [
+            'name' => $property,
+            'in' => 'query',
+            'type' => $type,
+            'required' => false,
+        ];
+    }
+
+    /**
+     * Retorna la clase declarada dentro de las criterias
+     * @param array $criterias
+     * @return string|null
+     */
+    private static function getCriteriaClase($criterias)
+    {
+        $clase = null;
+
+        if (isset($criterias[self::CLASS_SELECTOR])) {
+            $clase = $criterias[self::CLASS_SELECTOR];
+        }
+
+        return $clase;
+    }
+
+    /**
+     * Retorna todas las propiedades Swagger de una clase por nombre
+     * @param string $classname
+     * @return Property[]
+     * @throws AnnotationException
+     * @throws ReflectionException
+     */
+    private static function getPropiedadesSwagger($classname)
+    {
+        /** @var Property[] $lista */
+        $lista = [];
+        if ($classname) {
+            $reader = new AnnotationReader();
+            $reflClass = new ReflectionClass($classname);
+
+            $propiedades = $reflClass->getProperties();
+            foreach ($propiedades as $reflProp) {
+                $annotions = $reader->getPropertyAnnotations($reflProp);
+                foreach ($annotions as $annot) {
+                    if ($annot instanceof Property) {
+                        // Si no tiene propiedad la setteamos con nombre de atributo
+                        $annot->property = $annot->property ?: $reflProp->getName();
+                        array_push($lista, $annot);
+                    }
+                }
+            }
+        }
+
+        return $lista;
+    }
+
+    /**
+     * Retorna el type Swagger de un atributo de clase
+     * @param Property[] $props
+     * @param string $atributo
+     * @return string|null
+     */
+    private static function getTipoSwagger($props, $atributo)
+    {
+        $tipo = null;
+
+        $selectores = explode(self::API_SELECTOR, $atributo);
+        $newAttr = $selectores[sizeof($selectores) - 1];
+        // Eliminados el texto entre corchetes: id[ge] => id
+        $newAttr = preg_replace('/\[[\s\S]+?]/', '', $newAttr);;
+
+        foreach ($props as $prop) {
+            if ($prop->property === $newAttr && $prop->type) {
+                return $prop->type;
+            }
+        }
+
+        return $tipo;
     }
 
     /**

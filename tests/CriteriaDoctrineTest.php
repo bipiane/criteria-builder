@@ -140,6 +140,7 @@ class CriteriaDoctrineTest extends KernelTestCase
     public function testCriteriasFlatten()
     {
         $criterias = [
+            '__clase__' => 'AcmeBundle\Acme',
             'id' => [CriteriaDoctrine::CRITERIA_EQ],
             'provincia' => [
                 'id' => CriteriaDoctrine::CRITERIAS_NUMBER,

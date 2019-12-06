@@ -27,6 +27,7 @@ class CriteriaBuilder
      * @param string $defaulSort
      * @param string $defaulOrder
      * @return QueryBuilder
+     * @throws CriteriaException
      */
     public static function fetchFromQuery(
         QueryBuilder $qb,
