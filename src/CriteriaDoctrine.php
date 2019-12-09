@@ -563,12 +563,20 @@ class CriteriaDoctrine
             if (Utilidades::containsArray($v)) {
                 CriteriaDoctrine::validarFormatoCriteria($v);
             } else {
-                foreach ($v as $criteriaDoctrine) {
-                    if (!in_array($criteriaDoctrine, CriteriaDoctrine::ALL_CRITERIAS)) {
-                        $msj = implode(',', CriteriaDoctrine::ALL_CRITERIAS);
+                if (self::CLASS_SELECTOR !== $c) {
+                    if (!is_array($v)) {
                         throw new CriteriaException(
-                            "Criterio '$criteriaDoctrine' mal definido. Solo se pueden usar '$msj'"
+                            "Criterio mal definido. Se debe definir una lista de criterias para el filtro '$c'"
                         );
+                    }
+
+                    foreach ($v as $criteriaDoctrine) {
+                        if (!in_array($criteriaDoctrine, CriteriaDoctrine::ALL_CRITERIAS)) {
+                            $msj = implode(',', CriteriaDoctrine::ALL_CRITERIAS);
+                            throw new CriteriaException(
+                                "Criterio '$criteriaDoctrine' mal definido. Solo se pueden usar '$msj'"
+                            );
+                        }
                     }
                 }
             }

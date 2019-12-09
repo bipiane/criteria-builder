@@ -19,6 +19,7 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 class CriteriaDoctrineTest extends KernelTestCase
 {
     private $criteriasHabilitadas = [
+        '__clase__' => 'AcmeBundle\Acme',
         'id' => ['eq', 'ne', 'ge', 'gt', 'le', 'lt'],
         'descripcion' => ['eq', 'ne', 'like'],
         'provincia' => [
@@ -79,6 +80,22 @@ class CriteriaDoctrineTest extends KernelTestCase
 
         $this->assertEquals(true, is_array($criterias));
         $this->assertJsonStringEqualsJsonFile('tests/Responses/testCriteriaResponse.json', json_encode($criterias));
+    }
+
+    /**
+     * @throws CriteriaException
+     */
+    public function testCriteriaMalDefinida()
+    {
+        $criteriasHabilitadas = [
+            'id' => 'eq',
+            'provincia' => [
+                'descripcion' => ['like'],
+            ],
+        ];
+        $this->expectException(CriteriaException::class);
+        $this->expectExceptionMessage("Criterio mal definido. Se debe definir una lista de criterias para el filtro 'id'");
+        CriteriaDoctrine::obtenerCriterias([], $criteriasHabilitadas);
     }
 
     /**
