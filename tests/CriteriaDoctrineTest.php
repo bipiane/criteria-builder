@@ -180,4 +180,51 @@ class CriteriaDoctrineTest extends KernelTestCase
 
         $this->assertEquals($flatten, $result, 'La lista aplanada de criterias no es correcta');
     }
+
+    /**
+     * Consulta con selector de api antiguo
+     * @throws CriteriaException
+     */
+    public function testCriteriaOldSelector()
+    {
+        $oldSelector = CriteriaDoctrine::API_SELECTOR_OLD;
+        // GET .../api/localidades?
+        //      id[ge]=11&
+        //      activo=true&
+        //      descripcion[like]=%Colon%&
+        //      provincia->descripcion=null&
+        //      provincia->abrev[ne]=B&
+        //      provincia->pais[le]=5&
+        //      provincia->pais->descripcion[ne]='null'&
+        //      provincia->pais->abrev[ne]=null&
+        //      provincia->pais->activo=true
+        $queryHTTP = [
+            'id' => [
+                'ge' => 11
+            ],
+            'activo' => true,
+            'descripcion' => [
+                'like' => '%Colon%'
+            ],
+            'provincia->descripcion' => null,
+            'provincia->abrev' => [
+                'ne' => 'B'
+            ],
+            'provincia->pais' => [
+                'le' => 5
+            ],
+            'provincia->pais->descripcion' => [
+                'ne' => 'null'
+            ],
+            "provincia${oldSelector}pais${oldSelector}abrev" => [
+                'ne' => null
+            ],
+            'provincia->pais->activo' => true
+        ];
+
+        $criterias = CriteriaDoctrine::obtenerCriterias($queryHTTP, $this->criteriasHabilitadas);
+
+        $this->assertEquals(true, is_array($criterias));
+        $this->assertJsonStringEqualsJsonFile('tests/Responses/testCriteriaResponse.json', json_encode($criterias));
+    }
 }

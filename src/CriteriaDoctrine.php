@@ -29,6 +29,11 @@ class CriteriaDoctrine
     const API_SELECTOR = '-';
 
     /**
+     * Api selector Old
+     */
+    const API_SELECTOR_OLD = '->';
+
+    /**
      * Class selector
      */
     const CLASS_SELECTOR = '__clase__';
@@ -219,6 +224,9 @@ class CriteriaDoctrine
         // Verificamos el formato de las criterias habilitadas
         if (CriteriaDoctrine::validarFormatoCriteria($criteriasHabilitadas)) {
             foreach ($query as $param => $value) {
+                // Reemplazamos selectores viejos por nuevos
+                $param = str_replace(CriteriaDoctrine::API_SELECTOR_OLD, CriteriaDoctrine::API_SELECTOR, $param);
+
                 $criteriaObj = CriteriaDoctrine::getCriteria($param, $value);
 
                 // Validamos la criteria para determinar si es valida y en caso de que no, lanzamos excepción
